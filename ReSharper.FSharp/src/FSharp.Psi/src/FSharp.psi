@@ -154,6 +154,7 @@ interface synPat:
   optionalValPat |
   isInstPat |
   consPat |
+  wildPat |
   otherPat;
 
 interface namedPat:
@@ -166,10 +167,10 @@ interface longIdentPat:
 
 topNamedPat options { stubBase="PatternDeclarationBase"; }:
   synPat<PATTERN, Pattern>?
-  identifierToken{IDENTIFIER, Identifier};
+  identOrOpName{IDENTIFIER, Identifier};
 
 topLongIdentPat options { stubBase="PatternDeclarationBase"; }:
-  identifierToken{IDENTIFIER, Identifier}
+  identOrOpName{IDENTIFIER, Identifier}
   fakeSeparator
   // todo: use longIdentifier<LONG_IDENTIFIER, LongIdentifier>
   synPat<PARAMETER, Parameters>*
@@ -224,6 +225,9 @@ consPat options { stubBase="SynPatternBase"; }:
   synPat<PATTERN1, Pattern1>
   COLON_COLON
   synPat<PATTERN2, Pattern2>;
+
+wildPat options { stubBase="SynPatternBase"; }:
+  UNDERSCORE;
 
 otherPat options { stubBase="SynPatternBase"; }:
   fakeSeparator;
@@ -380,8 +384,16 @@ moduleAbbreviation options { stubBase="FSharpTypeElementDeclarationBase"; } extr
   typeParameterOfTypeList<TYPE_PARAMETERS_LIST, TypeParameterList>?
   fSharpTypeMemberDeclaration<TYPE_MEMBER, TypeMembers>*;
 
+interface activePatternCase:
+  activePatternCaseDeclaration |
+  activePatternWildCase;
+
 activePatternCaseDeclaration options { stubBase="FSharpDeclarationBase"; }:
-   fSharpIdentifier<IDENTIFIER, Identifier>;
+   IDENTIFIER<IDENTIFIER, Identifier>;
+
+activePatternWildCase:
+  wildPat;
+
 
 otherMemberDeclaration options { stubBase="DummyDeclaration"; }:
   accessModifiers<ACCESS_MODIFIERS, AccessModifiers>
@@ -556,6 +568,20 @@ private identifierToken{ROLE,Getter}:
   IDENTIFIER<@ROLE,@Getter> |
   SYMBOLIC_OP<@ROLE,@Getter>;
 
+private identOrOpName{ROLE,Getter}:
+  IDENTIFIER<@ROLE,@Getter> |
+  SYMBOLIC_OP<@ROLE,@Getter> |
+  activePatternId<@ROLE,@Getter>;
+
+activePatternId:
+  LPAREN<LPAREN, LParen>
+  BAR
+  (
+    activePatternCase<ACTIVE_PATTERN_CASE, Cases>
+    BAR
+  )+
+  RPAREN<RPAREN, RParen>;
+
 
 longIdentifier: IDENTIFIER<IDENTIFIER, Identifiers>*;
 
@@ -616,7 +642,7 @@ fakeSeparator: FAKE;
 
 localDeclaration options { stubBase="FSharpDeclarationBase"; }:
   fSharpAttribute<ATTRIBUTE, Attributes>*
-  identifierToken{IDENTIFIER, Identifier};
+  identOrOpName{IDENTIFIER, Identifier};
 
 
 typeExpression:

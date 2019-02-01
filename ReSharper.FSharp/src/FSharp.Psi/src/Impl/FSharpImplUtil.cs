@@ -101,6 +101,11 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl
         if (GetCompiledNameValue(attr, out var value))
           return value;
 
+      return GetCompiledName(identifier);
+    }
+
+    public static string GetCompiledName([CanBeNull] this IIdentifier identifier)
+    {
       if (identifier == null)
         return SharedImplUtil.MISSING_DECLARATION_NAME;
 
@@ -108,7 +113,9 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl
       if (name == SharedImplUtil.MISSING_DECLARATION_NAME)
         return name;
 
-      return PrettyNaming.CompileOpName.Invoke(name);
+      return identifier is IActivePatternId
+        ? name
+        : PrettyNaming.CompileOpName.Invoke(name);
     }
 
     [NotNull]
@@ -123,7 +130,11 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl
         return TreeTextRange.InvalidRange;
 
       var nameRange = identifier.GetTreeTextRange();
-      return FSharpNamesUtil.IsEscapedWithBackticks(identifier.IdentifierToken.GetText())
+      var identifierToken = identifier.IdentifierToken;
+      if (identifierToken == null)
+        return nameRange;
+
+      return FSharpNamesUtil.IsEscapedWithBackticks(identifierToken.GetText())
         ? nameRange.TrimLeft(2).TrimRight(2)
         : nameRange;
     }

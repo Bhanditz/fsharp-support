@@ -301,14 +301,20 @@ type FSharpTreeBuilderBase(sourceFile: IPsiSourceFile, lexer: ILexer, lifetime: 
         let endOffset = x.GetEndOffset(range)
 
         while x.Builder.GetTokenOffset() < endOffset do
-            // todo: |A|_|
-            if x.Builder.GetTokenType() == FSharpTokenType.IDENTIFIER then
+            let caseElementType =
+                let tokenType = x.Builder.GetTokenType()
+                if tokenType == FSharpTokenType.IDENTIFIER then ElementType.ACTIVE_PATTERN_CASE_DECLARATION else
+                if tokenType == FSharpTokenType.UNDERSCORE then ElementType.ACTIVE_PATTERN_WILD_CASE else
+                null
+
+            if isNotNull caseElementType then
                 let caseMark = x.Builder.Mark()
                 x.Advance()
-                x.Done(caseMark, ElementType.ACTIVE_PATTERN_CASE_DECLARATION) 
-            else x.Advance()
+                x.Done(caseMark, caseElementType)
 
-        x.Done(idMark, ElementType.F_SHARP_IDENTIFIER)
+            x.Advance()
+
+        x.Done(idMark, ElementType.ACTIVE_PATTERN_ID)
 
     member x.ProcessSimplePatterns(pats: SynSimplePats) =
         match pats with

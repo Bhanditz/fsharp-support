@@ -24,8 +24,8 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
       set => myCachedDeclaredElement = value;
     }
 
-    public override string DeclaredName => Identifier.Name;
-    public override IFSharpIdentifier NameIdentifier => Identifier;
+    public override string DeclaredName => NameIdentifier.GetSourceName();
+    public override IFSharpIdentifier NameIdentifier => (IFSharpIdentifier) Identifier;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public override IDeclaredElement DeclaredElement
@@ -37,6 +37,20 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
         return cache.GetOrCreateDeclaredElement(this, DeclaredElementFactory);
       }
     }
+
+//    public override FSharpSymbol GetFSharpSymbol()
+//    {
+//      var activePatternId = GetContainingNode<ITypeMemberDeclaration>() as IFSharpDeclaration;
+//      if (activePatternId == null)
+//        return null;
+//
+//      var activePattern = activePatternId.GetFSharpSymbol();
+//      if (activePattern == null)
+//        return null;
+//
+//      activePattern.
+//      return base.GetFSharpSymbol();
+//    }
 
     private IDeclaredElement DeclaredElementFactory(ActivePatternCaseDeclaration arg) =>
       GetFSharpSymbol() is FSharpActivePatternCase patternCase ? new ActivePatternCase(this, patternCase) : null;

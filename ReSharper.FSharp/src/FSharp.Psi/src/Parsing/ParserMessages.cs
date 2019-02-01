@@ -17,6 +17,8 @@
     public const string IDS_LONG_IDENT_PAT = "";
     public const string IDS_NAMED_PAT = "";
     public const string IDS_BINDING = "";
+    public const string IDS_IDENT_OR_OP_NAME = "";
+    public const string IDS_ACTIVE_PATTERN_CASE = "";
     public const string IDS_IDENTIFIER_TOKEN = "";
 
     public static string GetString(string id) => id;
