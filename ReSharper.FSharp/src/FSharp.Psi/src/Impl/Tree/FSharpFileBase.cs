@@ -96,7 +96,7 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
           var mfv = symbol as FSharpMemberOrFunctionOrValue;
           var activePatternCase = symbol as FSharpActivePatternCase;
 
-          if (symbolUse.IsFromDefinition || activePatternCase != null)
+          if (symbolUse.IsFromDefinition)
           {
             if (mfv != null)
             {
@@ -138,7 +138,7 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
                 if (caseDeclaration == null)
                   continue;
 
-                var caseRange = caseDeclaration.GetNameRange();
+                var caseRange = caseDeclaration.GetTreeTextRange();
                 var caseTextRange = new TextRange(caseRange.StartOffset.Offset, caseRange.EndOffset.Offset);
                 resolvedSymbols.Declarations[startOffset] = new FSharpResolvedSymbolUse(symbolUse, caseTextRange);
                 continue;
