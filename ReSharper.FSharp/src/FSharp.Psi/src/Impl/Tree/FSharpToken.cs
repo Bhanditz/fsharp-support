@@ -47,5 +47,8 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
 
     public virtual TResult Accept<TContext, TResult>(TreeNodeVisitor<TContext, TResult> visitor, TContext context) =>
       visitor.VisitNode(this, context);
+
+    public IFSharpFile GetFSharpFile() =>
+      this.GetContainingFile() as IFSharpFile;
   }
 }

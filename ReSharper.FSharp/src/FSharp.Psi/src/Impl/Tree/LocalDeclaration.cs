@@ -15,8 +15,8 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
   internal partial class LocalDeclaration : ITypeOwner, IFSharpDeclaredElement
   {
     public override IDeclaredElement DeclaredElement => this;
-    public override string DeclaredName => Identifier.GetCompiledName(Attributes);
-    public override IFSharpIdentifier NameIdentifier => Identifier;
+    public override string DeclaredName => SourceName;
+    public override IFSharpIdentifier NameIdentifier => (IFSharpIdentifier) Identifier;
     public IList<IDeclaration> GetDeclarations() => new IDeclaration[] {this};
 
     public IList<IDeclaration> GetDeclarationsIn(IPsiSourceFile sourceFile) =>
@@ -47,6 +47,6 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
     }
 
     public override void SetName(string name) =>
-      Identifier.ReplaceIdentifier(name);
+      NameIdentifier.ReplaceIdentifier(name);
   }
 }

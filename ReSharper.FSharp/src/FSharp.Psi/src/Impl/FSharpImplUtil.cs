@@ -11,7 +11,6 @@ using JetBrains.ReSharper.Plugins.FSharp.Psi.Util;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.ExtensionsAPI;
 using JetBrains.ReSharper.Psi.ExtensionsAPI.Caches2;
-using JetBrains.ReSharper.Psi.ExtensionsAPI.Tree;
 using JetBrains.ReSharper.Psi.Naming;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.Resources.Shell;
@@ -19,6 +18,7 @@ using JetBrains.Util;
 using JetBrains.Util.Logging;
 using JetBrains.Util.Extension;
 using Microsoft.FSharp.Compiler.SourceCodeServices;
+using PrettyNaming = Microsoft.FSharp.Compiler.PrettyNaming;
 
 namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl
 {
@@ -101,7 +101,14 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl
         if (GetCompiledNameValue(attr, out var value))
           return value;
 
-      return identifier?.Name ?? SharedImplUtil.MISSING_DECLARATION_NAME;
+      if (identifier == null)
+        return SharedImplUtil.MISSING_DECLARATION_NAME;
+
+      var name = identifier.Name;
+      if (name == SharedImplUtil.MISSING_DECLARATION_NAME)
+        return name;
+
+      return PrettyNaming.CompileOpName.Invoke(name);
     }
 
     [NotNull]
@@ -213,10 +220,10 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl
       {
         case IFSharpTypeDeclaration typeDeclaration:
           return typeDeclaration.Attributes;
-        case IMemberDeclaration memberDeclarationm:
-          return memberDeclarationm.Attributes;
-//        case IPatternDeclaration letBinding:
-//          return letBinding.Attributes;
+        case IMemberDeclaration memberDeclaration:
+          return memberDeclaration.Attributes;
+        case ISynPat pat:
+          return pat.Attributes;
         case IModuleLikeDeclaration moduleLikeDeclaration:
           return moduleLikeDeclaration.Attributes;
         default: return TreeNodeCollection<IFSharpAttribute>.Empty;

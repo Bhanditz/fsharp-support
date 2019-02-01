@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using JetBrains.ReSharper.Plugins.FSharp.Common.Util;
@@ -12,21 +12,21 @@ using Microsoft.FSharp.Compiler.SourceCodeServices;
 
 namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
 {
-  internal partial class NamedPat
+  internal partial class TopNamedPat
   {
-    protected override string DeclaredElementName => Identifier.GetCompiledName(Attributes);
-    public override TreeTextRange GetNameRange() => Identifier.GetNameRange();
+    protected override string DeclaredElementName => NameIdentifier.GetCompiledName(Attributes);
+    public override TreeTextRange GetNameRange() => NameIdentifier.GetNameRange();
 
-    public override IFSharpIdentifier NameIdentifier => Identifier;
+    public override IFSharpIdentifier NameIdentifier => (IFSharpIdentifier) Identifier;
   }
 
-  internal partial class LongIdentPat
+  internal partial class TopLongIdentPat
   {
-    protected override string DeclaredElementName => Identifier.GetCompiledName(Attributes);
+    protected override string DeclaredElementName => NameIdentifier.GetCompiledName(Attributes);
     public override string SourceName => IsDeclaration ? base.SourceName : SharedImplUtil.MISSING_DECLARATION_NAME;
     public override TreeTextRange GetNameRange() => IsDeclaration ? base.GetNameRange() : TreeTextRange.InvalidRange;
 
-    public override IFSharpIdentifier NameIdentifier => Identifier;
+    public override IFSharpIdentifier NameIdentifier => (IFSharpIdentifier) Identifier;
 
     protected override IDeclaredElement CreateDeclaredElement() =>
       IsDeclaration ? base.CreateDeclaredElement() : null;
@@ -38,7 +38,20 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
 
     protected override IDeclaredElement CreateDeclaredElement()
     {
-      if (!(GetFSharpSymbol() is FSharpMemberOrFunctionOrValue mfv)) return null;
+      var typeDeclaration = GetContainingNode<ITypeDeclaration>();
+      if (typeDeclaration == null)
+        return null;
+
+      if (!(GetFSharpSymbol() is FSharpMemberOrFunctionOrValue mfv))
+        return null;
+
+      if (typeDeclaration is IFSharpTypeDeclaration fsTypeDeclaration)
+      {
+        if ((!mfv.CurriedParameterGroups.IsEmpty() || !mfv.GenericParameters.IsEmpty()) && !mfv.IsMutable)
+          return new FSharpTypePrivateMethod(this, mfv, fsTypeDeclaration);
+
+        return new FSharpValField<PatternDeclarationBase>(this, mfv.FullType); 
+      }
 
       if (mfv.LiteralValue != null)
         return new FSharpLiteral(this, mfv);
@@ -69,7 +82,7 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
         {
           case IBinding binding:
             return binding;
-          case LongIdentPat longIdentPat when !longIdentPat.IsDeclaration:
+          case ITopLongIdentPat longIdentPat when !longIdentPat.IsDeclaration:
             return null;
           default:
             node = node.Parent;

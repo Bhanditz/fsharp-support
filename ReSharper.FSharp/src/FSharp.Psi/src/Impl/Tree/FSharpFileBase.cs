@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -255,6 +255,8 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
 
     public virtual TReturn Accept<TContext, TReturn>(TreeNodeVisitor<TContext, TReturn> visitor, TContext context) =>
       visitor.VisitNode(this, context);
+
+    public IFSharpFile GetFSharpFile() => (IFSharpFile) this;
   }
 
   public class FileCachedPsiValue<T> : CachedPsiValue<T>

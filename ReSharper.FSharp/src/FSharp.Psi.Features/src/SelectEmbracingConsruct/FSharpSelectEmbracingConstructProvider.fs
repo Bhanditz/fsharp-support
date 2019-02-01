@@ -82,7 +82,8 @@ type FSharpSelectEmbracingConstructProvider() =
         | TraverseStep.TypeDefn(typeDefn) -> [typeDefn.Range]
         | TraverseStep.MemberDefn(memberDefn) -> [memberDefn.Range]
         | TraverseStep.MatchClause(matchClause) -> [matchClause.Range; matchClause.RangeOfGuardAndRhs]
-        | TraverseStep.Binding(binding) -> [binding.RangeOfHeadPat; binding.RangeOfBindingAndRhs; binding.RangeOfBindingSansRhs]
+        | TraverseStep.Binding(binding) ->
+            [(*binding.RangeOfHeadPat; binding.RangeOfBindingAndRhs; binding.RangeOfBindingSansRhs*)] // todo: support local patterns
 
     let mapLid (lid: LongIdent) =
         match lid with
@@ -90,8 +91,8 @@ type FSharpSelectEmbracingConstructProvider() =
         | id :: ids ->
             ids
             |> List.fold (fun acc id -> (id :: (List.head acc)) :: acc) [[id]]
-            |> List.map List.rev
             |> List.map (fun lid ->
+                let lid = List.rev lid
                 let range = Range.unionRanges (List.head lid).idRange (List.last lid).idRange
                 TraverseStep.Expr (SynExpr.LongIdent (false, LongIdentWithDots(lid, []), None, range)))
 

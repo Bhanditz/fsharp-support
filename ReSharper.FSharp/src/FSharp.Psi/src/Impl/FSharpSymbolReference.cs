@@ -20,7 +20,7 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl
     }
 
     public FSharpSymbolUse GetSymbolUse() =>
-      (myOwner.GetContainingFile() as IFSharpFile)?.GetSymbolUse(myOwner.GetTreeStartOffset().Offset);
+      myOwner.GetFSharpFile()?.GetSymbolUse(myOwner.GetTreeStartOffset().Offset);
 
     public override ResolveResultWithInfo ResolveWithoutCache()
     {

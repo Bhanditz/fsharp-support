@@ -1,6 +1,7 @@
 ﻿using JetBrains.ReSharper.Plugins.FSharp.Psi.Tree;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.ExtensionsAPI.Tree;
+using JetBrains.ReSharper.Psi.Tree;
 
 namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
 {
@@ -14,5 +15,8 @@ namespace JetBrains.ReSharper.Plugins.FSharp.Psi.Impl.Tree
 
     public virtual TReturn Accept<TContext, TReturn>(TreeNodeVisitor<TContext, TReturn> visitor, TContext context) =>
       visitor.VisitNode(this, context);
+
+    public IFSharpFile GetFSharpFile() =>
+      this.GetContainingFile() as IFSharpFile;
   }
 }

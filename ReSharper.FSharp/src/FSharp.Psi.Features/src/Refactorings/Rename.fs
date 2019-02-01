@@ -93,7 +93,7 @@ type FSharpAtomicRenamesFactory() =
     override x.CheckRenameAvailability(element: IDeclaredElement) =
         match element with
         | :? ILocalDeclaration -> RenameAvailabilityCheckResult.CanBeRenamed
-        | _ -> RenameAvailabilityCheckResult.CanNotBeRenamed
+        | _ -> RenameAvailabilityCheckResult.CanBeRenamed // todo: do not commit
 
     override x.CreateAtomicRenames(declaredElement, newName, doNotAddBindingConflicts) =
         [| FSharpAtomicRename(declaredElement, newName, doNotAddBindingConflicts) :> AtomicRenameBase |] :> _
@@ -103,5 +103,37 @@ type FSharpAtomicRenamesFactory() =
 type FSharpNamingService(language: FSharpLanguage) =
     inherit NamingLanguageServiceBase(language)
 
+    static let notAllowedInTypes =
+        [| '.'; '+'; '$'; '&'; '['; ']'; '/'; '\\'; '*'; '\"'; '`' |]
+
     override x.MangleNameIfNecessary(name, _) =
         Keywords.QuoteIdentifierIfNeeded name
+
+    member x.IsSourceValidName(declaration: IDeclaration, name: string) =
+        if name.IsEmpty() then false else
+
+        match declaration with
+        | :? IUnionCaseDeclaration -> not (Char.IsLower(name.[0]) || not (Char.IsUpper(name.[0])))
+        | :? ITypeDeclaration -> name.IndexOfAny(notAllowedInTypes) <> -1
+        | _ -> not (startsWith "`" name || endsWith "`" name || name.ContainsNewLine() || name.Contains("``"))
+
+
+[<FileRenameProvider>]
+type RelatedFileRenameProvider() =
+    interface IFileRenameProvider with
+        member x.GetFileRenames(declaredElement, name) =
+            match declaredElement.As<IModule>() with
+            | null -> EmptyList.Instance :> _
+            | moduleTypeElement ->
+
+            let psiServices = moduleTypeElement.GetPsiServices()
+            moduleTypeElement.GetDeclarations() |> Seq.choose (fun decl ->
+                let alwaysRename =
+                    match decl with
+//                    | :? ITopLevelModuleDeclaration as decl -> decl.IsAnon
+                    | _ -> false
+
+                match decl.GetSourceFile().ToProjectFile() with
+                | null -> None
+                | projectFile ->
+                    Some (FileRename(psiServices, projectFile, name, alwaysRename)))
